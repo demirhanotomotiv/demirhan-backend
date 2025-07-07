@@ -24,4 +24,16 @@ router.get('/', (req, res) => {
   });
 });
 
+// Debug endpoint - ortam değişkenlerini göster (güvenlik için production'da kaldırın)
+router.get('/debug', (req, res) => {
+  res.json({
+    MYSQL_HOST: process.env.MYSQL_HOST || 'NOT_SET',
+    MYSQL_PORT: process.env.MYSQL_PORT || 'NOT_SET',
+    MYSQL_DATABASE: process.env.MYSQL_DATABASE || 'NOT_SET',
+    MYSQL_USER: process.env.MYSQL_USER || 'NOT_SET',
+    MYSQL_PASSWORD: process.env.MYSQL_PASSWORD ? 'SET' : 'NOT_SET',
+    timestamp: new Date().toISOString()
+  });
+});
+
 module.exports = router; 
