@@ -27,11 +27,20 @@ router.get('/', (req, res) => {
 // Debug endpoint - ortam değişkenlerini göster (güvenlik için production'da kaldırın)
 router.get('/debug', (req, res) => {
   res.json({
+    // Railway'in otomatik değişkenleri
+    MYSQLHOST: process.env.MYSQLHOST || 'NOT_SET',
+    MYSQLPORT: process.env.MYSQLPORT || 'NOT_SET',
+    MYSQLDATABASE: process.env.MYSQLDATABASE || 'NOT_SET',
+    MYSQLUSER: process.env.MYSQLUSER || 'NOT_SET',
+    MYSQLPASSWORD: process.env.MYSQLPASSWORD ? 'SET' : 'NOT_SET',
+    
+    // Manuel girilen değişkenler (fallback)
     MYSQL_HOST: process.env.MYSQL_HOST || 'NOT_SET',
     MYSQL_PORT: process.env.MYSQL_PORT || 'NOT_SET',
     MYSQL_DATABASE: process.env.MYSQL_DATABASE || 'NOT_SET',
     MYSQL_USER: process.env.MYSQL_USER || 'NOT_SET',
     MYSQL_PASSWORD: process.env.MYSQL_PASSWORD ? 'SET' : 'NOT_SET',
+    
     timestamp: new Date().toISOString()
   });
 });
