@@ -2,11 +2,11 @@ const mysql = require('mysql2');
 
 // Connection pool oluştur (Railway için daha güvenilir)
 const pool = mysql.createPool({
-  host: process.env.MYSQLHOST || process.env.MYSQLHOST || 'localhost',
-  user: process.env.MYSQLUSER || process.env.MYSQLUSER || 'root',
-  password: process.env.MYSQLPASSWORD || process.env.MYSQLPASSWORD || '',
-  database: process.env.MYSQLDATABASE || process.env.MYSQLDATABASE || 'test',
-  port: process.env.MYSQLPORT || process.env.MYSQLPORT || 3306,
+  host: process.env.MYSQLHOST || 'localhost',
+  user: process.env.MYSQLUSER || 'root',
+  password: process.env.MYSQLPASSWORD || '',
+  database: process.env.MYSQL_DATABASE || 'test',
+  port: process.env.MYSQLPORT || 3306,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
