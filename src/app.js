@@ -17,7 +17,7 @@ const authRoutes = require('./routes/auth');
 app.use('/', indexRoutes);
 app.use('/user', userRoutes);
 app.use('/health', healthRoutes);
-app.use('/auth', authRoutes);
+app.use('/auth', authRoutes);  
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
