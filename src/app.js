@@ -3,7 +3,7 @@ const cors = require('cors');
 const app = express();
 
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173', 'https://your-frontend-domain.com'],
+  origin: ['http://localhost:3000', 'http://localhost:5173', 'https://your-frontend-domain.com', 'https://ulas-frontend.vercel.app', 'http://localhost:3001'],
   credentials: true
 }));
 app.use(express.json());

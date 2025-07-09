@@ -1,18 +1,33 @@
 const mysql = require('mysql2');
+require('dotenv').config();
 
-// Connection pool oluştur (Railway için daha güvenilir)
-const pool = mysql.createPool({
-  host: process.env.MYSQLHOST || 'localhost',
-  user: process.env.MYSQLUSER || 'root',
-  password: process.env.MYSQLPASSWORD || '',
-  database: process.env.MYSQL_DATABASE || 'test',
-  port: process.env.MYSQLPORT || 3306,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
+// Ortama göre veritabanı ayarlarını seç
+let dbConfig;
+if (process.env.NODE_ENV === 'production') {
+  // Production (server) veritabanı ayarları
+  dbConfig = {
+    host: process.env.PROD_MYSQLHOST,
+    user: process.env.PROD_MYSQLUSER,
+    password: process.env.PROD_MYSQLPASSWORD,
+    database: process.env.PROD_MYSQL_DATABASE,
+    port: process.env.PROD_MYSQLPORT || 3306,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+  };
+} else {
+  // Development (local) veritabanı ayarları
+  dbConfig = {
+    host: process.env.DEV_MYSQLHOST || 'localhost',
+    user: process.env.DEV_MYSQLUSER || 'root',
+    password: process.env.DEV_MYSQLPASSWORD || '',
+    database: process.env.DEV_MYSQL_DATABASE || 'test',
+    port: process.env.DEV_MYSQLPORT || 3306
+  };
+}
 
-// Promise wrapper
+// Connection pool oluştur
+const pool = mysql.createPool(dbConfig);
 const promisePool = pool.promise();
 
 // Bağlantı testi
