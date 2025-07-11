@@ -3,9 +3,17 @@ const cors = require('cors');
 const app = express();
 
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173', 'https://ulasapp.site/', 'http://localhost:3001'],
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://ulasapp.site',
+    'http://localhost:3001',
+    'https://ulasserver-production.up.railway.app', // backend domaini
+    'https://ulasapp.site' // frontend domaini (örnek)
+  ],
   credentials: true
 }));
+
 app.use(express.json());
 
 // Route'ları dahil et
