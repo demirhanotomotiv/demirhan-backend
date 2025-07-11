@@ -5,7 +5,7 @@ const { pool } = require('../config/db');
 // Kullanıcı kaydı
 exports.register = async (req, res) => {
   try {
-    const { username, email, password, role = 'employee' } = req.body;
+    const { username, email, password, role = 'employee', first_name = '' } = req.body;
 
     // Gerekli alanları kontrol et
     if (!username || !email || !password) {
@@ -57,10 +57,10 @@ exports.register = async (req, res) => {
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    // Kullanıcıyı veritabanına ekle
+    // Kullanıcıyı veritabanına ekle (first_name eklendi)
     const [result] = await pool.promise().query(
-      'INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)',
-      [username, email, passwordHash, role]
+      'INSERT INTO users (username, email, password_hash, role, first_name) VALUES (?, ?, ?, ?, ?)',
+      [username, email, passwordHash, role, first_name]
     );
 
     // JWT token oluştur
@@ -81,7 +81,8 @@ exports.register = async (req, res) => {
         id: result.insertId,
         username,
         email,
-        role
+        role,
+        first_name
       },
       token
     });
