@@ -1,101 +1,9 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../config/db');
+const Activity = require('../models/activityModel');
 
-// Kullanıcı kaydı
-exports.register = async (req, res) => {
-  try {
-    const { username, email, password, role = 'employee', first_name = '', last_name = '' } = req.body;
 
-    // Gerekli alanları kontrol et
-    if (!username || !email || !password) {
-      return res.status(400).json({
-        message: 'Kullanıcı adı, email ve şifre gerekli',
-        error: 'MISSING_FIELDS'
-      });
-    }
-
-    // Email formatını kontrol et
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({
-        message: 'Geçersiz email formatı',
-        error: 'INVALID_EMAIL'
-      });
-    }
-
-    // Şifre güvenliğini kontrol et (en az 6 karakter)
-    if (password.length < 6) {
-      return res.status(400).json({
-        message: 'Şifre en az 6 karakter olmalı',
-        error: 'WEAK_PASSWORD'
-      });
-    }
-
-    // Rol kontrolü (sadece admin ve employee)
-    if (role !== 'admin' && role !== 'employee') {
-      return res.status(400).json({
-        message: 'Geçersiz rol. Sadece admin veya employee olabilir',
-        error: 'INVALID_ROLE'
-      });
-    }
-
-    // Kullanıcının zaten var olup olmadığını kontrol et
-    const [existingUsers] = await pool.promise().query(
-      'SELECT id FROM users WHERE username = ? OR email = ?',
-      [username, email]
-    );
-
-    if (existingUsers.length > 0) {
-      return res.status(409).json({
-        message: 'Bu kullanıcı adı veya email zaten kullanımda',
-        error: 'USER_EXISTS'
-      });
-    }
-
-    // Şifreyi hash'le
-    const saltRounds = 12;
-    const passwordHash = await bcrypt.hash(password, saltRounds);
-
-    // Kullanıcıyı veritabanına ekle (first_name ve last_name eklendi)
-    const [result] = await pool.promise().query(
-      'INSERT INTO users (username, email, password_hash, role, first_name, last_name) VALUES (?, ?, ?, ?, ?, ?)',
-      [username, email, passwordHash, role, first_name, last_name]
-    );
-
-    // JWT token oluştur
-    const token = jwt.sign(
-      { 
-        id: result.insertId, 
-        username, 
-        email, 
-        role 
-      },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '24h' }
-    );
-
-    res.status(201).json({
-      message: 'Kullanıcı başarıyla oluşturuldu',
-      user: {
-        id: result.insertId,
-        username,
-        email,
-        role,
-        first_name,
-        last_name
-      },
-      token
-    });
-
-  } catch (error) {
-    console.error('Kayıt hatası:', error);
-    res.status(500).json({
-      message: 'Sunucu hatası',
-      error: 'INTERNAL_ERROR'
-    });
-  }
-};
 
 // Kullanıcı girişi
 exports.login = async (req, res) => {
@@ -112,7 +20,7 @@ exports.login = async (req, res) => {
 
     // Kullanıcıyı bul
     const [users] = await pool.promise().query(
-      'SELECT id, username, email, password_hash, role, is_active FROM users WHERE username = ? OR email = ?',
+      'SELECT id, username, email, password_hash, role, is_active, full_name FROM personnel WHERE username = ? OR email = ?',
       [username, username]
     );
 
@@ -160,10 +68,13 @@ exports.login = async (req, res) => {
         id: user.id,
         username: user.username,
         email: user.email,
-        role: user.role
+        role: user.role,
+        full_name: user.full_name
       },
       token
     });
+    // Activity log
+    try { await Activity.create(user.id, 'Kullanıcı girişi', { username: user.username, email: user.email }); } catch (e) { console.error('Activity log error:', e); }
 
   } catch (error) {
     console.error('Giriş hatası:', error);
@@ -180,7 +91,7 @@ exports.getProfile = async (req, res) => {
     const userId = req.user.id;
 
     const [users] = await pool.promise().query(
-      'SELECT id, username, email, role, created_at FROM users WHERE id = ?',
+      'SELECT id, username, email, role, full_name, created_at FROM personnel WHERE id = ?',
       [userId]
     );
 
@@ -226,7 +137,7 @@ exports.changePassword = async (req, res) => {
 
     // Mevcut şifreyi kontrol et
     const [users] = await pool.promise().query(
-      'SELECT password_hash FROM users WHERE id = ?',
+      'SELECT password_hash FROM personnel WHERE id = ?',
       [userId]
     );
 
@@ -250,13 +161,15 @@ exports.changePassword = async (req, res) => {
     const newPasswordHash = await bcrypt.hash(newPassword, saltRounds);
 
     await pool.promise().query(
-      'UPDATE users SET password_hash = ? WHERE id = ?',
+      'UPDATE personnel SET password_hash = ? WHERE id = ?',
       [newPasswordHash, userId]
     );
 
     res.json({
       message: 'Şifre başarıyla değiştirildi'
     });
+    // Activity log
+    try { await Activity.create(userId, 'Şifre değiştirildi', {}); } catch (e) { console.error('Activity log error:', e); }
 
   } catch (error) {
     console.error('Şifre değiştirme hatası:', error);
